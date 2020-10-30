@@ -1,9 +1,14 @@
-FROM python:3.8.3-alpine
+FROM python:3-slim
+
+COPY requirements.txt ./requirements.txt
 
 ## install dependencies
-RUN apk update && \
-    apk add --virtual build-deps gcc musl-dev && \
-    apk add postgresql-dev
+RUN apt-get update && \
+    apt-get install -y build-essential musl-dev && \
+    apt-get install -y libpq-dev && \
+    pip install -r requirements.txt && \
+    apt-get -y remove build-essential musl-dev libpq-dev && \
+    apt-get -y clean && apt-get -y autoremove
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -12,16 +17,6 @@ ENV PYTHONUNBUFFERED 1
 ## set working directory
 WORKDIR /usr/src/app
 
-## add user
-RUN adduser -D user
-RUN chown -R user:user /usr/src/app && chmod -R 755 /usr/src/app
-
-## add and install requirements
-RUN pip install --upgrade pip
-COPY requirements.txt ./requirements.txt
-RUN pip install -r requirements.txt
-
-## add app
 COPY . .
 
 EXPOSE 8000
